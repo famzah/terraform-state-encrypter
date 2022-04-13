@@ -1,0 +1,11 @@
+#!/bin/bash
+set -u
+
+which nodemon >/dev/null
+if [ "$?" -eq 0 ]; then
+	bin='nodemon'
+else
+	bin='node'
+fi
+
+exec "$bin" ./tf-state-enc-server.mjs -- "$@"

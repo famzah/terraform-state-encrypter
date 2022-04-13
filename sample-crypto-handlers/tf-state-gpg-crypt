@@ -1,0 +1,28 @@
+#!/bin/bash
+set -u
+
+[ "$#" -eq 3 ] || {
+	echo "Usage: action from_file to_file" >&2
+	exit 1
+}
+
+action="$1" ; shift
+from_file="$1"; shift
+to_file="$1"; shift
+
+# pwgen -sy 128 1
+[[ -v TF_STATE_GPG_CRYPT_PASSFILE ]] || {
+	echo "Error: You must provide the path to the secret in the env variable TF_STATE_GPG_CRYPT_PASSFILE" >&2
+	exit 1
+}
+
+gpg_common=( --no-symkey-cache --passphrase-file "$TF_STATE_GPG_CRYPT_PASSFILE" --batch --yes )
+
+if [ "$action" == "encrypt" ]; then
+	exec gpg --symmetric --cipher-algo AES256 "${gpg_common[@]}" --output "$to_file" "$from_file"
+elif [ "$action" == "decrypt" ]; then
+	exec gpg --quiet "${gpg_common[@]}" --output "$to_file" --decrypt "$from_file"
+else
+	echo "Error: Unknown action \"$action\"" >&2
+	exit 1
+fi
